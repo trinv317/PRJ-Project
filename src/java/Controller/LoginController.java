@@ -1,22 +1,24 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package Controller;
 
+import User.UserDAO;
+import User.UserDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  *
- * @author LEGION
+ * @author lienm
  */
-@WebServlet(name = "LoginController", urlPatterns = {"/LoginController"})
 public class LoginController extends HttpServlet {
 
     /**
@@ -28,20 +30,43 @@ public class LoginController extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    private static final String ERROR="login.jsp";
+    private static final String ADMIN="AD";
+    private static final String ADMIN_PAGE="admin.jsp";
+    private static final String US="US";
+    private static final String USER_PAGE="user.jsp";
+    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet LoginController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet LoginController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        String url= ERROR;
+        try {
+            String userID= request.getParameter("userID");
+            String password= request.getParameter("Password");
+            UserDAO dao= new UserDAO();
+            UserDTO loginUser= dao.checkLogin(userID, password);
+//            xac thuc o day ne
+            if(loginUser!= null){
+                HttpSession session= request.getSession();
+                session.setAttribute("LOGIN_USER", loginUser);
+//                phan quyen o day ne
+                String roleID= loginUser.getRoleID();
+                if(ADMIN.equals(roleID)){
+                    url= ADMIN_PAGE;
+                }else if(US.equals(roleID)){
+                    url= USER_PAGE;
+                }else{
+                    request.setAttribute("ERROR", "Your role is not support!");
+                }
+            }else{
+                request.setAttribute("ERROR", "Incorrect userID or Password");
+            }
+            
+        } catch (Exception e) {
+            log("Error at MainController: "+ e.toString());
+        }finally{
+            request.getRequestDispatcher(url).forward(request, response);
         }
     }
 

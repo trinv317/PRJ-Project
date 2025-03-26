@@ -1,7 +1,7 @@
 <%-- 
     Document   : error
-    Created on : Mar 26, 2025, 10:19:56 AM
-    Author     : LEGION
+    Created on : Sep 28, 2022, 5:02:15 PM
+    Author     : hd
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -9,9 +9,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>ERROR PAGE</title>
     </head>
     <body>
-        <h1>Hello World!</h1>
+        <% 
+            String error= (String)request.getAttribute("ERROR");
+            if(error== null) error= "";
+        %>
+        Error: <h1><%= error %></h1>
     </body>
 </html>

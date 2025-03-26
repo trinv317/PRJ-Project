@@ -1,22 +1,25 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package Controller;
 
+import User.UserDAO;
+import User.UserDTO;
+import User.UserError;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  *
- * @author LEGION
+ * @author lienm
  */
-@WebServlet(name = "RegisterController", urlPatterns = {"/RegisterController"})
 public class RegisterController extends HttpServlet {
 
     /**
@@ -28,20 +31,60 @@ public class RegisterController extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    private static final String ERROR = "register.jsp";
+    private static final String SUCCESS = "register.jsp";
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RegisterController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RegisterController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        String url = ERROR;
+        UserDAO dao = new UserDAO();
+        UserError userError = new UserError();
+        try {
+            String userID = request.getParameter("userID");
+            String fullName = request.getParameter("fullName");
+            String Password = request.getParameter("Password");
+            String roleID = request.getParameter("roleID");
+            String Phone =request.getParameter("Phone");
+            String Gmail = request.getParameter("Gmail");
+            String Address = request.getParameter("Address");
+            String Confirm = request.getParameter("Confirm");
+            HttpSession session = request.getSession();
+            boolean checkValidation = true;
+            if (userID.length() > 50 || userID.length() < 2) {
+                userError.setUserID("User ID must [2,50]");
+                checkValidation = false;
+            }
+            boolean checkDuplicate = dao.checkDuplicate(userID);
+            if (checkDuplicate) {
+                userError.setUserID("Duplicate userID!");
+                checkValidation = false;
+            }
+            if (fullName.length() > 50 || fullName.length() < 5) {
+                userError.setFullName("fullName  must [5,50]");
+                checkValidation = false;
+            }
+            if (!Password.equals(Confirm)) {
+                userError.setConfirm("hai Password khong giong nhau");
+                checkValidation = false;
+            }
+            if (checkValidation) {
+                UserDTO user = new UserDTO(userID, fullName, Password, roleID,Phone,Gmail, Address);
+                boolean checkInsert = dao.insertV2(user);
+                if (checkInsert) {
+                    url = SUCCESS;
+                    session.setAttribute("MESSAGE", "You added successfully " + fullName);
+                } else {
+                    session.setAttribute("ERROR", "Update fail!");
+                }
+            } else {
+                session.setAttribute("USER_ERROR", userError);
+            }
+        } catch (Exception e) {
+            log("Error at RegisterController: " + e.toString());
+
+        } finally {
+            request.getRequestDispatcher(url).forward(request, response);
         }
     }
 
